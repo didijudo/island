@@ -1,2 +1,10 @@
 .DS_Store
 *.xcodeproj
+*.sln
+*.db
+*.opendb
+*.vcxproj
+*.filters
+src/.vs/
+src/Debug/
+src/Dependencies/

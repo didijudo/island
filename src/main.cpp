@@ -208,7 +208,7 @@ void initRendering() {
 	t3dInit(); //Initialize text drawing functionality
 	
 	//Load the model
-	_model = MD2Model::load("blockybalboa.md2");
+	_model = MD2Model::load("lionteste.md2");
 	if (_model != NULL) {
 		_model->setAnimation("run");
 	}

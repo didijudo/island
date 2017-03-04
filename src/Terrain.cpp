@@ -1,9 +1,5 @@
-#include "vec3f.h"
-#include "Terrain.h"
+#include "terrain.h"
 
-using namespace std;
-
-//Represents a terrain, by storing a set of heights and normals at 2D locations
 Terrain::Terrain(int w2, int l2) {
 	w = w2;
 	l = l2;

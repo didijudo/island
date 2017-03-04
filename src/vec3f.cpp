@@ -16,7 +16,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/* File for "Terrain" lesson of the OpenGL tutorial on
+/* File for "Putting It All Together" lesson of the OpenGL tutorial on
  * www.videotutorialsrock.com
  */
 
@@ -125,3 +125,12 @@ ostream &operator<<(ostream &output, const Vec3f &v) {
 	cout << '(' << v[0] << ", " << v[1] << ", " << v[2] << ')';
 	return output;
 }
+
+
+
+
+
+
+
+
+

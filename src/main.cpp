@@ -1,188 +1,331 @@
-//
-//  main.cpp
-//  EstudoOpenGL
-//
-//  Created by Diego Andrade on 25/01/17.
-//  Copyright © 2017 Diego Andrade. All rights reserved.
-//
+/* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above notice and this permission notice shall be included in all copies
+* or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/
+/* File for "Terrain" lesson of the OpenGL tutorial on
+* www.videotutorialsrock.com
+*/
+
+
+
 #include <iostream>
+#include <stdlib.h>
 
 #ifdef __APPLE__
-
 #include <OpenGL/OpenGL.h>
-#include <GLUT/GLUT.h>
-
+#include <GLUT/glut.h>
+#else
+#include "Dependencies\glew\glew.h"
+#include "Dependencies\freeglut\freeglut.h"
 #endif
 
-#ifdef __WINDOWS__ | __LINUX__
-#include <GL/gl.h>
-#include <GLUT/gl.h>
-#endif
+#include "imageloader.h"
+#include "vec3f.h"
+#include <math.h>
 
-#include "zebra.hpp"
+using namespace std;
 
-void render(void);
-void keyboard(unsigned char c, int x, int y);
-void mouse(int button, int state, int x, int y);
-void special(GLint c, GLint x, GLint y);
-void Inicializa();
+float max(float first, float last);
 
-GLfloat x1 = 100.0f;
-GLfloat y1 = 150.0f;
+//Represents a terrain, by storing a set of heights and normals at 2D locations
+class Terrain {
+private:
+	int w; //Width
+	int l; //Length
+	float** hs; //Heights
+	Vec3f** normals;
+	bool computedNormals; //Whether normals is up-to-date
+public:
+	Terrain(int w2, int l2) {
+		w = w2;
+		l = l2;
 
-GLfloat x2 = 200.0f;
-GLfloat y2 = 100.0f;
-GLsizei rsize = 10;
+		hs = new float*[l];
+		for (int i = 0; i < l; i++) {
+			hs[i] = new float[w];
+		}
 
-GLfloat xstep = 1.0f;
-GLfloat ystep = 1.0f;
-GLfloat xstep2 = 1.0f;
-GLfloat ystep2 = 1.0f;
+		normals = new Vec3f*[l];
+		for (int i = 0; i < l; i++) {
+			normals[i] = new Vec3f[w];
+		}
 
-Zebra z;
-Zebra z2;
+		computedNormals = false;
+	}
 
-//janela
-GLfloat windowWidth;
-GLfloat windowHeight;
+	~Terrain() {
+		for (int i = 0; i < l; i++) {
+			delete[] hs[i];
+		}
+		delete[] hs;
 
-GLfloat islandWidth;
-GLfloat islandHeight;
+		for (int i = 0; i < l; i++) {
+			delete[] normals[i];
+		}
+		delete[] normals;
+	}
 
-void AlteraTamanhoJanela(GLsizei w, GLsizei h);
-void Timer(int value);
+	int width() {
+		return w;
+	}
+
+	int length() {
+		return l;
+	}
+
+	//Sets the height at (x, z) to y
+	void setHeight(int x, int z, float y) {
+		hs[z][x] = y;
+		computedNormals = false;
+	}
+
+	//Returns the height at (x, z)
+	float getHeight(int x, int z) {
+		return hs[z][x];
+	}
+
+	//Computes the normals, if they haven't been computed yet
+	void computeNormals() {
+		if (computedNormals) {
+			return;
+		}
+
+		//Compute the rough version of the normals
+		Vec3f** normals2 = new Vec3f*[l];
+		for (int i = 0; i < l; i++) {
+			normals2[i] = new Vec3f[w];
+		}
+
+		for (int z = 0; z < l; z++) {
+			for (int x = 0; x < w; x++) {
+				Vec3f sum(0.0f, 0.0f, 0.0f);
+
+				Vec3f out;
+				if (z > 0) {
+					out = Vec3f(0.0f, hs[z - 1][x] - hs[z][x], -1.0f);
+				}
+				Vec3f in;
+				if (z < l - 1) {
+					in = Vec3f(0.0f, hs[z + 1][x] - hs[z][x], 1.0f);
+				}
+				Vec3f left;
+				if (x > 0) {
+					left = Vec3f(-1.0f, hs[z][x - 1] - hs[z][x], 0.0f);
+				}
+				Vec3f right;
+				if (x < w - 1) {
+					right = Vec3f(1.0f, hs[z][x + 1] - hs[z][x], 0.0f);
+				}
+
+				if (x > 0 && z > 0) {
+					sum += out.cross(left).normalize();
+				}
+				if (x > 0 && z < l - 1) {
+					sum += left.cross(in).normalize();
+				}
+				if (x < w - 1 && z < l - 1) {
+					sum += in.cross(right).normalize();
+				}
+				if (x < w - 1 && z > 0) {
+					sum += right.cross(out).normalize();
+				}
+
+				normals2[z][x] = sum;
+			}
+		}
+
+		//Smooth out the normals
+		const float FALLOUT_RATIO = 0.5f;
+		for (int z = 0; z < l; z++) {
+			for (int x = 0; x < w; x++) {
+				Vec3f sum = normals2[z][x];
+
+				if (x > 0) {
+					sum += normals2[z][x - 1] * FALLOUT_RATIO;
+				}
+				if (x < w - 1) {
+					sum += normals2[z][x + 1] * FALLOUT_RATIO;
+				}
+				if (z > 0) {
+					sum += normals2[z - 1][x] * FALLOUT_RATIO;
+				}
+				if (z < l - 1) {
+					sum += normals2[z + 1][x] * FALLOUT_RATIO;
+				}
+
+				if (sum.magnitude() == 0) {
+					sum = Vec3f(0.0f, 1.0f, 0.0f);
+				}
+				normals[z][x] = sum;
+			}
+		}
+
+		for (int i = 0; i < l; i++) {
+			delete[] normals2[i];
+		}
+		delete[] normals2;
+
+		computedNormals = true;
+	}
+
+	//Returns the normal at (x, z)
+	Vec3f getNormal(int x, int z) {
+		if (!computedNormals) {
+			computeNormals();
+		}
+		return normals[z][x];
+	}
+};
+
+//Loads a terrain from a heightmap.  The heights of the terrain range from
+//-height / 2 to height / 2.
+Terrain* loadTerrain(const char* filename, float height) {
+	Image* image = loadBMP(filename);
+	Terrain* t = new Terrain(image->width, image->height);
+	for (int y = 0; y < image->height; y++) {
+		for (int x = 0; x < image->width; x++) {
+			unsigned char color =
+				(unsigned char)image->pixels[3 * (y * image->width + x)];
+			float h = height * ((color / 255.0f) - 0.5f);
+			t->setHeight(x, y, h);
+		}
+	}
+
+	delete image;
+	t->computeNormals();
+	return t;
+}
+
+float _angle = 60.0f;
+Terrain* _terrain;
+
+void cleanup() {
+	delete _terrain;
+}
+
+void handleKeypress(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27: //Escape key
+		cleanup();
+		exit(0);
+	}
+}
+
+void initRendering() {
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_NORMALIZE);
+	glShadeModel(GL_SMOOTH);
+}
+
+void handleResize(int w, int h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0, (double)w / (double)h, 1.0, 200.0);
+}
+
+void drawScene() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f, 0.0f, -10.0f);
+	glRotatef(30.0f, 1.0f, 0.0f, 0.0f);
+	glRotatef(-_angle, 0.0f, 1.0f, 0.0f);
+
+	GLfloat ambientColor[] = { 0.4f, 0.4f, 0.4f, 1.0f };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
+
+	GLfloat lightColor0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	GLfloat lightPos0[] = { -0.5f, 0.8f, 0.1f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+
+	float scale = 5.0f / max(_terrain->width() - 1, _terrain->length() - 1);
+	glScalef(scale, scale, scale);
+	glTranslatef(-(float)(_terrain->width() - 1) / 2,
+		0.0f,
+		-(float)(_terrain->length() - 1) / 2);
+
+	glColor3f(0.3f, 0.9f, 0.0f);
+	for (int z = 0; z < _terrain->length() - 1; z++) {
+		//Makes OpenGL draw a triangle at every three consecutive vertices
+		glBegin(GL_TRIANGLE_STRIP);
+		for (int x = 0; x < _terrain->width(); x++) {
+			Vec3f normal = _terrain->getNormal(x, z);
+			glNormal3f(normal[0], normal[1], normal[2]);
+			glVertex3f(x, _terrain->getHeight(x, z), z);
+			normal = _terrain->getNormal(x, z + 1);
+			glNormal3f(normal[0], normal[1], normal[2]);
+			glVertex3f(x, _terrain->getHeight(x, z + 1), z + 1);
+		}
+		glEnd();
+	}
+
+	glutSwapBuffers();
+}
+
+void update(int value) {
+	_angle += 1.0f;
+	if (_angle > 360) {
+		_angle -= 360;
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(25, update, 0);
+}
+
+float max(float first, float last) {
+	if (first > last)
+	{
+		return first;
+	}
+	else {
+		return last;
+	}
+}
 
 int main(int argc, char** argv) {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("Island");
-    glutReshapeFunc(AlteraTamanhoJanela);
-    glutTimerFunc(33, Timer, 1);
-    glutDisplayFunc(render);
-    Inicializa();
-    
-    
-    glutMainLoop();
-    
-    return 0;
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(400, 400);
+
+	glutCreateWindow("Terrain - videotutorialsrock.com");
+	initRendering();
+
+	_terrain = loadTerrain("heightmap.bmp", 1);
+
+	glutDisplayFunc(drawScene);
+	glutKeyboardFunc(handleKeypress);
+	glutReshapeFunc(handleResize);
+	glutTimerFunc(25, update, 0);
+
+	glutMainLoop();
+	return 0;
 }
 
-//Funcao que sera chamada a cada intervalo de tempo
-void Timer(int value) {
-    //Muda a direcao quando chega na borda esquerda ou direita
-    if (x1 >= ((windowWidth - islandWidth)/2) + islandWidth - z.getTamanho() || x1 < (windowWidth - islandWidth)/2) {
-        xstep = -xstep;
-    }
-    
-    if (x2 >= ((windowWidth - islandWidth)/2) + islandWidth- z2.getTamanho() || x2 < (windowWidth - islandWidth)/2) {
-        xstep2 = -xstep2;
-    }
-    
-    //Muda de direcao quando chega na borda superior ou inferior
-    if (y1 >= ((windowHeight - islandHeight)/2) + islandHeight - z.getTamanho()
-        || y1 < (windowHeight - islandHeight)/2) {
-        ystep = -ystep;
-        z.aumenta();
-    }
-    
-    if (y2 >= ((windowHeight - islandHeight)/2) + islandHeight - z2.getTamanho() || y2 < (windowHeight - islandHeight)/2) {
-        ystep2 = -ystep2;
-    }
-    
-    //se o quadrado sair do volume de visualizacao
-    if (x1 > windowWidth-rsize) {
-        x1 = windowWidth-rsize-1;
-    }
-    
-    if (x2 > windowWidth-rsize) {
-        x2 = windowWidth-rsize-1;
-    }
-    
-    if(y1 > windowHeight-rsize) {
-        y1 = windowHeight-rsize-1;
-    }
-    
-    if(y2 > windowHeight-rsize) {
-        y2 = windowHeight-rsize-1;
-    }
-    
-    //move o quadrado
-    
-    x1 += xstep;
-    y1 += ystep;
-    
-    x2 += xstep2;
-    y2 += ystep2;
-    
-    //redesenha o quadrado com as novas coordenadas
-    glutPostRedisplay();
-    glutTimerFunc(33,Timer, value);
-}
 
-// Função callback chamada quando o tamanho da janela é alterado
-void AlteraTamanhoJanela(GLsizei w, GLsizei h)
-{
-    // Evita a divisao por zero
-    if(h == 0) {
-        h = 1;
-    }
-    
-    // Especifica as dimensões da Viewport
-    glViewport(0, 0, w, h);
-    
-    // Inicializa o sistema de coordenadas
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    // Estabelece a janela de seleção (left, right, bottom, top)
-    if (w <= h)  {
-        windowHeight = 250.0f * h/w;
-        windowWidth = 250.0f;
-    } else  {
-        windowWidth = 250.0f * w/h;
-        windowHeight = 250.0f;
-    }
-    
-    islandWidth = 0.6 * windowWidth;
-    islandHeight = 0.6 * windowHeight;
-    
-    gluOrtho2D(0.0f, windowWidth, 0.0f, windowHeight);
-}
 
-void render(void) {
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    glColor3ub(107, 142, 35);
-    glBegin(GL_QUADS);
-    glVertex2f( (windowWidth - islandWidth)/2, ((windowHeight - islandHeight)/2) + islandHeight);
-    glVertex2f( (windowWidth - islandWidth)/2, (windowHeight - islandHeight)/2);
-    glVertex2f(((windowWidth - islandWidth)/2) + islandWidth, (windowHeight - islandHeight)/2);
-    glVertex2f(((windowWidth - islandWidth)/2) + islandWidth, ((windowHeight - islandHeight)/2) + islandHeight);
-    glEnd();
-    
-    glColor3ub(120, 0, 0);
-    
-    //Seta a zebra1 na posicao inicial x1 y1
-    z = Zebra(x1,y1);
-    glColor3ub(0, 110, 0);
-    //Seta a zebra2 na posicao inicial x1 y2
-    z2 = Zebra(x2, y2);
-    
-    /*glBegin(GL_QUADS);
-    
-    glVertex2f(x1, y1+rsize);
-    glVertex2f(x1, y1);
-    glVertex2f(x1+rsize, y1);
-    glVertex2f(x1+rsize, y1+rsize);
-    glEnd();*/
-    
-    glutSwapBuffers();
-}
 
-void Inicializa() {
-    glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
-}
+
+
+
+
+

@@ -39,6 +39,8 @@
 
 using namespace std;
 
+void inicializa(void);
+
 float max(float first, float last);
 
 //Represents a terrain, by storing a set of heights and normals at 2D locations
@@ -217,8 +219,14 @@ void cleanup() {
 	delete _terrain;
 }
 
-void handleKeypress(unsigned char key, int x, int y) {
+void teclado(unsigned char key, int x, int y) {
 	switch (key) {
+    case 'd':
+        _angle += 1.0f;
+        if (_angle > 360) {
+            _angle -= 360;
+        }
+        break;
 	case 27: //Escape key
 		cleanup();
 		exit(0);
@@ -283,10 +291,7 @@ void drawScene() {
 }
 
 void update(int value) {
-	_angle += 1.0f;
-	if (_angle > 360) {
-		_angle -= 360;
-	}
+	
 
 	glutPostRedisplay();
 	glutTimerFunc(25, update, 0);
@@ -313,16 +318,18 @@ int main(int argc, char** argv) {
 	_terrain = loadTerrain("heightmap.bmp", 1);
 
 	glutDisplayFunc(drawScene);
-	glutKeyboardFunc(handleKeypress);
+	glutKeyboardFunc(teclado);
 	glutReshapeFunc(handleResize);
 	glutTimerFunc(25, update, 0);
-
+    inicializa();
 	glutMainLoop();
 	return 0;
 }
 
 
-
+void inicializa(void) {
+    glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
+}
 
 
 

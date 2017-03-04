@@ -1,21 +1,25 @@
-
-#include <iostream>
 #include "vec3f.h"
+
 
 class Terrain {
 private:
-	bool computedNormals;
-	public:
-		Terrain(int w2, int l2);
+	int w; //Width
+	int l; //Length
+	float** hs; //Heights
+	Vec3f** normals;
+	bool computedNormals; //Whether normals is up-to-date
 
-		~Terrain();
+public:
+	Terrain(int w2, int l2);
 
-		int width();
-		int length();
+	~Terrain();
 
-		void setHeight(int x, int z, float y);
-		float getHeight(int x, int z);
-		void computeNormals();
+	int width();
+	int length();
 
-		Vec3f getNormal(int x, int z);
+	void setHeight(int x, int z, float y);
+	float getHeight(int x, int z);
+	void computeNormals();
+
+	Vec3f getNormal(int x, int z);
 };

@@ -1,3 +1,6 @@
+#ifndef animal_h
+#define animal_h
+
 #ifdef __APPLE__
 #include <OpenGL/OpenGL.h>
 #include <GLUT/glut.h>
@@ -8,9 +11,13 @@
 
 #include "md2model.h"
 #include "terrain.h"
+#include <math.h>
 
-class Guy {
-private:
+const int LION = 1;
+const int ZEBRA = 2;
+
+class Animal {
+protected:
 	MD2Model* model;
 	Terrain* terrain;
 	float terrainScale; //The scaling factor for the terrain
@@ -29,10 +36,7 @@ private:
 	bool isTurningLeft; //Whether the guy is currently turning left
 	float timeUntilSwitchDir; //The amount of time until switching direction
 
-							  //Advances the state of the guy by GUY_STEP_TIME seconds (without
-							  //altering animTime)
-							  //The amount by which the Guy class's step function advances the state of a guy
-	const float GUY_STEP_TIME = 0.01f;
+	const float ANIMAL_STEP_TIME = 0.01f;
 	const float PI = 3.1415926535f;
 	//Returns a random float from 0 to < 1
 	float randomFloat();
@@ -40,12 +44,13 @@ private:
 	void step();
 
 public:
-	Guy(MD2Model* model1,
+	Animal(MD2Model* model1,
 		Terrain* terrain1,
 		float terrainScale1);
 
 	void advance(float dt);
-	void draw();
+	virtual void draw();
+	virtual int type(); 
 
 	float x();
 	float z();
@@ -58,5 +63,6 @@ public:
 	float walkAngle();
 	float heightAt(Terrain* terrain, float x, float z);
 
-	void bounceOff(Guy* otherGuy);
+	void bounceOff(Animal* otherGuy);
 };
+#endif

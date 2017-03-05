@@ -1,15 +1,12 @@
-#include "guy.h"
-
-//Returns a random float from 0 to < 1
-float Guy::randomFloat() {
+#include "animal.h"
+//jpgReturns a random float from 0 to < 1
+float Animal::randomFloat() {
 	return (float)rand() / ((float)RAND_MAX + 1);
 }
 
-//Advances the state of the guy by GUY_STEP_TIME seconds (without
-//altering animTime)
-void Guy::step() {
+void Animal::step() {
 	//Update the turning direction information
-	timeUntilSwitchDir -= GUY_STEP_TIME;
+	timeUntilSwitchDir -= ANIMAL_STEP_TIME;
 	while (timeUntilSwitchDir <= 0) {
 		timeUntilSwitchDir += 20 * randomFloat() + 15;
 		isTurningLeft = !isTurningLeft;
@@ -19,8 +16,8 @@ void Guy::step() {
 	float maxX = terrainScale * (terrain->width() - 1) - radius0;
 	float maxZ = terrainScale * (terrain->length() - 1) - radius0;
 
-	x0 += velocityX() * GUY_STEP_TIME;
-	z0 += velocityZ() * GUY_STEP_TIME;
+	x0 += velocityX() * ANIMAL_STEP_TIME;
+	z0 += velocityZ() * ANIMAL_STEP_TIME;
 	bool hitEdge = false;
 	if (x0 < radius0) {
 		x0 = radius0;
@@ -43,17 +40,17 @@ void Guy::step() {
 	if (hitEdge) {
 		//Turn more quickly if we've hit the edge
 		if (isTurningLeft) {
-			angle -= 0.5f * speed * GUY_STEP_TIME;
+			angle -= 0.5f * speed * ANIMAL_STEP_TIME;
 		}
 		else {
-			angle += 0.5f * speed * GUY_STEP_TIME;
+			angle += 0.5f * speed * ANIMAL_STEP_TIME;
 		}
 	}
 	else if (isTurningLeft) {
-		angle -= 0.05f * speed * GUY_STEP_TIME;
+		angle -= 0.05f * speed * ANIMAL_STEP_TIME;
 	}
 	else {
-		angle += 0.05f * speed * GUY_STEP_TIME;
+		angle += 0.05f * speed * ANIMAL_STEP_TIME;
 	}
 
 	while (angle > 2 * PI) {
@@ -65,7 +62,7 @@ void Guy::step() {
 }
 
 
-Guy::Guy(MD2Model* model1,
+Animal::Animal(MD2Model* model1,
 	Terrain* terrain1,
 	float terrainScale1) {
 	model = model1;
@@ -76,7 +73,8 @@ Guy::Guy(MD2Model* model1,
 	timeUntilNextStep = 0;
 
 	//Initialize certain fields to random values
-	radius0 = 0.4f * randomFloat() + 0.25f;
+	
+	radius0 = 0.4f * randomFloat() + 0.20f;
 	x0 = randomFloat() *
 		(terrainScale * (terrain->width() - 1) - radius0) + radius0;
 	z0 = randomFloat() *
@@ -89,7 +87,7 @@ Guy::Guy(MD2Model* model1,
 
 //Advances the state of the guy by the specified amount of time, by
 //calling step() the appropriate number of times and adjusting animTime
-void Guy::advance(float dt) {
+void Animal::advance(float dt) {
 	//Adjust animTime
 	animTime += 0.45f * dt * speed / radius0;
 	if (animTime > -100000000 && animTime < 1000000000) {
@@ -107,7 +105,7 @@ void Guy::advance(float dt) {
 		if (timeUntilNextStep < dt) {
 			dt -= timeUntilNextStep;
 			step();
-			timeUntilNextStep = GUY_STEP_TIME;
+			timeUntilNextStep = ANIMAL_STEP_TIME;
 		}
 		else {
 			timeUntilNextStep -= dt;
@@ -116,7 +114,11 @@ void Guy::advance(float dt) {
 	}
 }
 
-void Guy::draw() {
+int Animal::type() {
+	return 0;
+}
+
+void Animal::draw() {
 	if (model == NULL) {
 		return;
 	}
@@ -134,42 +136,42 @@ void Guy::draw() {
 	glPopMatrix();
 }
 
-float Guy::x() {
+float Animal::x() {
 	return x0;
 }
 
-float Guy::z() {
+float Animal::z() {
 	return z0;
 }
 
 //Returns the current height of the guy on the terrain
-float Guy::y() {
+float Animal::y() {
 	return terrainScale *
 		heightAt(terrain, x0 / terrainScale, z0 / terrainScale);
 }
 
-float Guy::velocityX() {
+float Animal::velocityX() {
 	return speed * cos(angle);
 }
 
-float Guy::velocityZ() {
+float Animal::velocityZ() {
 	return speed * sin(angle);
 }
 
 //Returns the approximate radius of the guy
-float Guy::radius() {
+float Animal::radius() {
 	return radius0;
 }
 
 //Returns the angle at which the guy is currently walking, in radians.
 //An angle of 0 indicates the positive x direction, while an angle of
 //PI / 2 indicates the positive z direction.
-float Guy::walkAngle() {
+float Animal::walkAngle() {
 	return angle;
 }
 
 //Returns the approximate height of the terrain at the specified (x, z) position
-float Guy::heightAt(Terrain* terrain, float x, float z) {
+float Animal::heightAt(Terrain* terrain, float x, float z) {
 	//Make (x, z) lie within the bounds of the terrain
 	if (x < 0) {
 		x = 0;
@@ -211,7 +213,7 @@ float Guy::heightAt(Terrain* terrain, float x, float z) {
 
 //Adjusts the angle at which this guy is walking in response to a
 //collision with the specified guy
-void Guy::bounceOff(Guy* otherGuy) {
+void Animal::bounceOff(Animal* otherGuy) {
 	float vx = velocityX();
 	float vz = velocityZ();
 

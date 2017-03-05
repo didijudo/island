@@ -1,18 +1,24 @@
 #include <cstdlib>
-#include <stdlib.h>
 #include <ctime>
 #include <iostream>
 #include <math.h>
+#include <set>
 #include <sstream>
+#include <stdlib.h>
+#include <vector>
 
 #include "imageloader.h"
 #include "text3d.h"
-#include "quadtree.h"
+#include "animal.h"
+#include "zebra.hpp"
+#include "lion.hpp"
+#include "quadtree.hpp"
 
 
 using namespace std;
 
-const int NUM_GUYS = 100;
+const int NUM_ZEBRA = 10;
+const int NUM_LEAO = 10;
 //The width of the terrain in units, after scaling
 const float TERRAIN_WIDTH = 50.0f;
 //The amount of time between each time that we handle collisions
@@ -37,13 +43,16 @@ Terrain* loadTerrain(const char* filename, float height) {
 	return t;
 }
 
+void inicializa() {
+	glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
+}
 
-void potentialCollisions(vector < Quadtree::GuyPair > &cs, Quadtree* quadtree) {
+void potentialCollisions(vector<GuyPair> &cs, Quadtree* quadtree) {
 	quadtree->potentialCollisions(cs);
 }
 
 //Returns whether guy1 and guy2 are currently colliding
-bool testCollision(Guy* guy1, Guy* guy2) {
+bool testCollision(Animal* guy1, Animal* guy2) {
 	float dx = guy1->x() - guy2->x();
 	float dz = guy1->z() - guy2->z();
 	float r = guy1->radius() + guy2->radius();
@@ -57,28 +66,34 @@ bool testCollision(Guy* guy1, Guy* guy2) {
 	}
 }
 
-void handleCollisions(vector<Guy*> &guys,
+void handleCollisions(vector<Animal*> &guys,
 					  Quadtree* quadtree,
 					  int &numCollisions) {
-	vector<Quadtree::GuyPair> gps;
+	vector<GuyPair> gps;
 	potentialCollisions(gps, quadtree);
 	for(unsigned int i = 0; i < gps.size(); i++) {
-		Quadtree::GuyPair gp = gps[i];
+		GuyPair gp = gps[i];
 		
-		Guy* g1 = gp.guy1;
-		Guy* g2 = gp.guy2;
+		Animal* g1 = gp.guy1;
+		Animal* g2 = gp.guy2;
 		if (testCollision(g1, g2)) {
-			g1->bounceOff(g2);
-			g2->bounceOff(g1);
+			
+			//TODO verificar se a colisao foi entre 2 leoes ou 2 zebras
+			//Se for entre um leao e uma zebra define o que fazer
+			
+			if (g1->type() == g2->type()) {
+				g1->bounceOff(g2);
+				g2->bounceOff(g1);
+			}
 			numCollisions++;
 		}
 	}
 }
 
 //Moves the guys over the given interval of time, without handling collisions
-void moveGuys(vector<Guy*> &guys, Quadtree* quadtree, float dt) {
+void moveGuys(vector<Animal*> &guys, Quadtree* quadtree, float dt) {
 	for(unsigned int i = 0; i < guys.size(); i++) {
-		Guy* guy = guys[i];
+		Animal* guy = guys[i];
 		float oldX = guy->x();
 		float oldZ = guy->z();
 		guy->advance(dt);
@@ -87,7 +102,7 @@ void moveGuys(vector<Guy*> &guys, Quadtree* quadtree, float dt) {
 }
 
 //Advances the state of the guys over the indicated interval of time
-void advance(vector<Guy*> &guys,
+void advance(vector<Animal*> &guys,
 			 Quadtree* quadtree,
 			 float t,
 			 float &timeUntilHandleCollisions,
@@ -107,15 +122,19 @@ void advance(vector<Guy*> &guys,
 	}
 }
 
-//Returns a vector of numGuys new guys
-vector<Guy*> makeGuys(int numGuys, MD2Model* model, Terrain* terrain) {
-	vector<Guy*> guys;
-	for(int i = 0; i < numGuys; i++) {
-		guys.push_back(new Guy(model,
+vector<Animal*> makeAnimals(int numGuys, MD2Model* model, Terrain* terrain) {
+	vector<Animal*> animals;
+	for(int i = 0; i < NUM_LEAO; i++) {
+		animals.push_back(new Lion(model,
 							   terrain,
 							   TERRAIN_WIDTH / (terrain->width() - 1)));
 	}
-	return guys;
+	for(int i = 0; i < NUM_ZEBRA; i++) {
+		animals.push_back(new Zebra(model,
+							   terrain,
+							   TERRAIN_WIDTH / (terrain->width() - 1)));
+	}
+	return animals;
 }
 
 //Draws the terrain
@@ -140,7 +159,7 @@ void drawTerrain(Terrain* terrain) {
 //of collisions have occurred
 void drawNumCollisions(int numCollisions) {
 	ostringstream oss;
-	oss << "Collisions: " << numCollisions;
+	oss << "Colisoes: " << numCollisions;
 	string str = oss.str();
 	
 	glDisable(GL_TEXTURE_2D);
@@ -148,14 +167,16 @@ void drawNumCollisions(int numCollisions) {
 	glColor3f(1.0f, 1.0f, 0.0f);
 	glPushMatrix();
 	glTranslatef(0.0f, 1.7f, -5.0f);
-	glScalef(0.2f, 0.2f, 0.2f);
+	glScalef(0.1f, 0.1f, 0.1f);
 	t3dDraw2D(str, 0, 0);
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
 }
 
+
+
 MD2Model* _model;
-vector<Guy*> _guys;
+vector<Animal*> _guys;
 Terrain* _terrain;
 float _angle = 0;
 Quadtree* _quadtree;
@@ -173,8 +194,22 @@ void cleanup() {
 	t3dCleanup();
 }
 
-void handleKeypress(unsigned char key, int x, int y) {
+void teclado(unsigned char key, int x, int y) {
 	switch (key) {
+		case 'd': 
+			_angle += 0.3f;
+			if (_angle > 360) {
+				_angle -= 360;
+			}
+			break;
+
+		case 'a': 
+			_angle -= 0.3f;
+			if (_angle < 360) {
+				_angle += 360;
+			}
+			break;
+
 		case 27: //Escape key
 			cleanup();
 			exit(0);
@@ -208,7 +243,7 @@ void initRendering() {
 	t3dInit(); //Initialize text drawing functionality
 	
 	//Load the model
-	_model = MD2Model::load("lionteste.md2");
+	_model = MD2Model::load("blockybalboa.md2");
 	if (_model != NULL) {
 		_model->setAnimation("run");
 	}
@@ -259,10 +294,10 @@ void drawScene() {
 }
 
 void update(int value) {
-	_angle += 0.3f;
+/*	_angle += 0.3f;
 	if (_angle > 360) {
 		_angle -= 360;
-	}
+	}*/
 	
 	advance(_guys,
 			_quadtree,
@@ -279,36 +314,33 @@ int main(int argc, char** argv) {
 	
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(400, 400);
+	glutInitWindowSize(800, 600);
 	
-	glutCreateWindow("Putting It All Together - videotutorialsrock.com");
+	glutCreateWindow("Island");
 	initRendering();
 	
-	_terrain = loadTerrain("heightmap.bmp", 0.0f); //Load the terrain
-	_guys = makeGuys(NUM_GUYS, _model, _terrain); //Create the guys
-	//Compute the scaling factor for the terrain
+	_terrain = loadTerrain("heightmap.bmp", 20.0f);
+
+	//Cria as instancias dos animais
+	_guys = makeAnimals(NUM_ZEBRA + NUM_LEAO, _model, _terrain); 
+
+
+	//Calcula a escala do terreno
 	float scaledTerrainLength =
 		TERRAIN_WIDTH / (_terrain->width() - 1) * (_terrain->length() - 1);
-	//Construct and initialize the quadtree
+
+	//Inicializa os quadrantes
 	_quadtree = new Quadtree(0, 0, TERRAIN_WIDTH, scaledTerrainLength, 1);
 	for(unsigned int i = 0; i < _guys.size(); i++) {
 		_quadtree->add(_guys[i]);
 	}
 	
 	glutDisplayFunc(drawScene);
-	glutKeyboardFunc(handleKeypress);
+	glutKeyboardFunc(teclado);
 	glutReshapeFunc(handleResize);
 	glutTimerFunc(25, update, 0);
 	
+	inicializa();
 	glutMainLoop();
 	return 0;
 }
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 //
-//  zebra.cpp
+//  lion.cpp
 //  Island
 //
 //  Created by Diego Andrade on 17/02/17.
@@ -12,26 +12,26 @@
 #include "Dependencies\glew\glew.h"
 #include "Dependencies\freeglut\freeglut.h"
 #endif
-#include "zebra.hpp"
+#include "lion.hpp"
 
-Zebra::Zebra(MD2Model* model1, Terrain* terrain1, float terrainScale1) : 
+Lion::Lion(MD2Model* model1, Terrain* terrain1, float terrainScale1) : 
 	Animal(model1, terrain1, terrainScale1) {
 
 		radius0 = 0.5f;
-		speed = 1.9f;
+		speed = 2.0f;
 }
 
-void Zebra::draw() {
+void Lion::draw() {
 	if (model == NULL) {
 		return;
 	}
 
-	float scale = 0.10f;
+	float scale = 0.12f;
 
 	glPushMatrix();
 	glTranslatef(x0, scale * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);
-	glColor3f(20, 23, 0);
+	glColor3f(200, 10, 200);
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(scale, scale, scale);
@@ -39,6 +39,6 @@ void Zebra::draw() {
 	glPopMatrix();
 }
 
-int Zebra::type() {
-	return ZEBRA;
+int Lion::type() {
+	return LION;
 }

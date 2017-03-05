@@ -1,13 +1,13 @@
 //
-//  zebra.hpp
+//  lion.hpp
 //  Island
 //
 //  Created by Diego Andrade on 17/02/17.
 //  Copyright © 2017 Diego Andrade. All rights reserved.
 //
 
-#ifndef zebra_hpp
-#define zebra_hpp
+#ifndef lion_hpp
+#define lion_hpp
 
 #include <stdio.h>
 #ifdef __APPLE__
@@ -19,13 +19,13 @@
 #endif
 #include "animal.h"
 
-class Zebra : public Animal {
+class Lion : public Animal {
 public:
-	Zebra(MD2Model* model1,
+	Lion(MD2Model* model1,
 		Terrain* terrain1,
 		float terrainScale1);
 
 	virtual void draw();
 	virtual int type();
 };
-#endif /* zebra_hpp */
+#endif /* lion_hpp */

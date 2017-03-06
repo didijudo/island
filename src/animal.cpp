@@ -64,17 +64,21 @@ void Animal::step() {
 
 Animal::Animal(MD2Model* model1,
 	Terrain* terrain1,
-	float terrainScale1) {
+	float terrainScale1,
+	int position1) {
 	model = model1;
 	terrain = terrain1;
 	terrainScale = terrainScale1;
 
+	//Position of animal on array
+	position0 = position1;
 	animTime = 0;
 	timeUntilNextStep = 0;
 
 	//Initialize certain fields to random values
 	
 	radius0 = 0.4f * randomFloat() + 0.20f;
+	scale0 = radius0 / 2.5f;
 	x0 = randomFloat() *
 		(terrainScale * (terrain->width() - 1) - radius0) + radius0;
 	z0 = randomFloat() *
@@ -123,15 +127,13 @@ void Animal::draw() {
 		return;
 	}
 
-	float scale = radius0 / 2.5f;
-
 	glPushMatrix();
-	glTranslatef(x0, scale * 10.0f + y(), z0);
+	glTranslatef(x0, scale0 * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);
 	glColor3f(1, 1, 1);
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-	glScalef(scale, scale, scale);
+	glScalef(scale0, scale0, scale0);
 	model->draw(animTime);
 	glPopMatrix();
 }
@@ -148,6 +150,14 @@ float Animal::z() {
 float Animal::y() {
 	return terrainScale *
 		heightAt(terrain, x0 / terrainScale, z0 / terrainScale);
+}
+
+float Animal::scale() {
+	return scale0;
+}
+
+int Animal::position() {
+	return position0;
 }
 
 float Animal::velocityX() {
@@ -230,4 +240,12 @@ void Animal::bounceOff(Animal* otherGuy) {
 	if (vx != 0 || vz != 0) {
 		angle = atan2(vz, vx);
 	}
+}
+
+void Animal::setScale(float scale) {
+	scale0 = scale;
+}
+
+void Animal::setPosition(int p) {
+	position0 = p;
 }

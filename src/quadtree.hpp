@@ -13,14 +13,14 @@
 #include "animal.h"
 using namespace std;
 
-struct GuyPair {
-	Animal* guy1;
-	Animal* guy2;
+struct AnimalPair {
+	Animal* ani1;
+	Animal* ani2;
 };
 
-const int MAX_QUADTREE_DEPTH = 6;
-const int MIN_GUYS_PER_QUADTREE = 2;
-const int MAX_GUYS_PER_QUADTREE = 5;
+const int MAX_QUADTREE_DEPTH = 100;
+const int MIN_GUYS_PER_QUADTREE = 1;
+const int MAX_GUYS_PER_QUADTREE = 8;
 
 class Quadtree {
 	private:
@@ -34,24 +34,24 @@ class Quadtree {
 		Quadtree *children[2][2];
 		//Whether this has children
 		bool hasChildren;
-		//The guys in this, if this doesn't have any children
-		set<Animal*> guys;
+		//The animals in this, if this doesn't have any children
+		set<Animal*> animals;
 		//The depth of this in the tree
 		int depth;
-		//The number of guys in this, including those stored in its children
-		int numGuys;
+		//The number of animals in this, including those stored in its children
+		int numAnimals;
 
-		void fileGuy(Animal* guy, float x, float z, bool addGuy);
+		void fileAnimal(Animal* animal, float x, float z, bool addAnimal);
 		void haveChildren();
-		void collectGuys(set<Animal*> &gs);
+		void collectAnimals(set<Animal*> &gs);
 		void destroyChildren();
-		void remove(Animal* guy, float x, float z);
+		void remove(Animal* animal, float x, float z);
 	public:
 		Quadtree(float minX1, float minZ1, float maxX1, float maxZ1, int d);
 		~Quadtree();
-		void add(Animal* guy);
-		void remove(Animal* guy);
-		void guyMoved(Animal* guy, float x, float z);
-		void potentialCollisions(vector<GuyPair> &collisions);
+		void add(Animal* animal);
+		void remove(Animal* animal);
+		void animalMoved(Animal* animal, float x, float z);
+		void potentialCollisions(vector<AnimalPair> &collisions);
 };
 #endif

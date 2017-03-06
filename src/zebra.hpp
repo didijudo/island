@@ -23,7 +23,8 @@ class Zebra : public Animal {
 public:
 	Zebra(MD2Model* model1,
 		Terrain* terrain1,
-		float terrainScale1);
+		float terrainScale1,
+		int position1);
 
 	virtual void draw();
 	virtual int type();

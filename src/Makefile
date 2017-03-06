@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall
+#CFLAGS = -Wall
 PROG = island
 
 SRCS = main.cpp imageloader.cpp md2model.cpp text3d.cpp vec3f.cpp Terrain.cpp animal.cpp zebra.cpp lion.cpp quadtree.cpp

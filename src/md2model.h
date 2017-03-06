@@ -84,13 +84,4 @@ class MD2Model {
 		static MD2Model* load(const char* filename);
 };
 
-
-
-
-
-
-
-
-
-
 #endif

@@ -17,12 +17,12 @@
 
 using namespace std;
 
-const int NUM_ZEBRA = 10;
-const int NUM_LEAO = 10;
-//The width of the terrain in units, after scaling
+const int NUM_ZEBRA = 15;
+const int NUM_LEAO = 5;
+
 const float TERRAIN_WIDTH = 50.0f;
-//The amount of time between each time that we handle collisions
-const float TIME_BETWEEN_HANDLE_COLLISIONS = 0.01f;
+
+const float TIME_BETWEEN_HANDLE_COLLISIONS = 0.1f;
 
 //Loads a terrain from a heightmap.  The heights of the terrain range from
 //-height / 2 to height / 2.
@@ -47,18 +47,18 @@ void inicializa() {
 	glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
 }
 
-void potentialCollisions(vector<GuyPair> &cs, Quadtree* quadtree) {
+void potentialCollisions(vector<AnimalPair> &cs, Quadtree* quadtree) {
 	quadtree->potentialCollisions(cs);
 }
 
-//Returns whether guy1 and guy2 are currently colliding
-bool testCollision(Animal* guy1, Animal* guy2) {
-	float dx = guy1->x() - guy2->x();
-	float dz = guy1->z() - guy2->z();
-	float r = guy1->radius() + guy2->radius();
+//Returns whether animal1 and animal2 are currently colliding
+bool testCollision(Animal* animal1, Animal* animal2) {
+	float dx = animal1->x() - animal2->x();
+	float dz = animal1->z() - animal2->z();
+	float r = animal1->radius() + animal2->radius();
 	if (dx * dx + dz * dz < r * r) {
-		float vx = guy1->velocityX() - guy2->velocityX();
-		float vz = guy1->velocityZ() - guy2->velocityZ();
+		float vx = animal1->velocityX() - animal2->velocityX();
+		float vz = animal1->velocityZ() - animal2->velocityZ();
 		return vx * dx + vz * dz < 0;
 	}
 	else {
@@ -66,73 +66,101 @@ bool testCollision(Animal* guy1, Animal* guy2) {
 	}
 }
 
-void handleCollisions(vector<Animal*> &guys,
+void handleCollisions(vector<Animal*> &animals,
 					  Quadtree* quadtree,
 					  int &numCollisions) {
-	vector<GuyPair> gps;
-	potentialCollisions(gps, quadtree);
-	for(unsigned int i = 0; i < gps.size(); i++) {
-		GuyPair gp = gps[i];
+	vector<AnimalPair> aps;
+	potentialCollisions(aps, quadtree);
+	for(unsigned int i = 0; i < aps.size(); i++) {
+		AnimalPair ap = aps[i];
 		
-		Animal* g1 = gp.guy1;
-		Animal* g2 = gp.guy2;
-		if (testCollision(g1, g2)) {
+		Animal* a1 = ap.ani1;
+		Animal* a2 = ap.ani2;
+		if (a1 == NULL || a2 == NULL) {
+			std::cout << "chegou NULL: ";
+			continue;
+		}
+
+		if (testCollision(a1, a2)) {
 			
 			//TODO verificar se a colisao foi entre 2 leoes ou 2 zebras
 			//Se for entre um leao e uma zebra define o que fazer
 			
-			if (g1->type() == g2->type()) {
-				g1->bounceOff(g2);
-				g2->bounceOff(g1);
+			if (a1->type() == a2->type()) {
+				a1->bounceOff(a2);
+				a2->bounceOff(a1);
+				std::cout << "capacity changed: " << animals.capacity()<< '\n';
+			} else {
+				if (a1->type() == ZEBRA && a2->type() == LION) {
+					if (a1->scale() > 1.5 * a2->scale()) {
+						quadtree->remove(a2);	
+						animals.erase(animals.begin()+a2->position());
+						std::cout << "capacity changed: " << animals.capacity()<< '\n';
+					}	else {
+						quadtree->remove(a1);	
+						animals.erase(animals.begin() + a1->position());
+						std::cout << "capacity changed: " << animals.capacity()<< '\n';
+					}
+				} 	
+
+				if (a1->type() == LION && a2->type() == ZEBRA) {
+					if (a2->scale() > 1.5 * a1->scale()) {
+						quadtree->remove(a1);	
+						animals.erase(animals.begin() + a1->position());
+					}	else {
+						quadtree->remove(a2);
+						animals.erase(animals.begin() + a2->position());
+					}
+				} 	
 			}
 			numCollisions++;
 		}
 	}
 }
 
-//Moves the guys over the given interval of time, without handling collisions
-void moveGuys(vector<Animal*> &guys, Quadtree* quadtree, float dt) {
-	for(unsigned int i = 0; i < guys.size(); i++) {
-		Animal* guy = guys[i];
-		float oldX = guy->x();
-		float oldZ = guy->z();
-		guy->advance(dt);
-		quadtree->guyMoved(guy, oldX, oldZ);
+void moveAnimals(vector<Animal*> &animals, Quadtree* quadtree, float dt) {
+	for(unsigned int i = 0; i < animals.size(); i++) {
+		Animal* animal = animals[i];
+		float oldX = animal->x();
+		float oldZ = animal->z();
+		animal->advance(dt);
+		quadtree->animalMoved(animal, oldX, oldZ);
 	}
 }
 
-//Advances the state of the guys over the indicated interval of time
-void advance(vector<Animal*> &guys,
+void advance(vector<Animal*> &animals,
 			 Quadtree* quadtree,
 			 float t,
 			 float &timeUntilHandleCollisions,
 			 int &numCollisions) {
 	while (t > 0) {
 		if (timeUntilHandleCollisions <= t) {
-			moveGuys(guys, quadtree, timeUntilHandleCollisions);
-			handleCollisions(guys, quadtree, numCollisions);
+			moveAnimals(animals, quadtree, timeUntilHandleCollisions);
+			handleCollisions(animals, quadtree, numCollisions);
 			t -= timeUntilHandleCollisions;
 			timeUntilHandleCollisions = TIME_BETWEEN_HANDLE_COLLISIONS;
 		}
 		else {
-			moveGuys(guys, quadtree, t);
+			moveAnimals(animals, quadtree, t);
 			timeUntilHandleCollisions -= t;
 			t = 0;
 		}
 	}
 }
 
-vector<Animal*> makeAnimals(int numGuys, MD2Model* model, Terrain* terrain) {
+vector<Animal*> makeAnimals(int numAnimals, MD2Model* model, Terrain* terrain) {
 	vector<Animal*> animals;
 	for(int i = 0; i < NUM_LEAO; i++) {
 		animals.push_back(new Lion(model,
 							   terrain,
-							   TERRAIN_WIDTH / (terrain->width() - 1)));
+							   TERRAIN_WIDTH / (terrain->width() - 1),
+								 i ));
 	}
-	for(int i = 0; i < NUM_ZEBRA; i++) {
+	for(int i = NUM_LEAO; i < NUM_LEAO + NUM_ZEBRA; i++) {
 		animals.push_back(new Zebra(model,
 							   terrain,
-							   TERRAIN_WIDTH / (terrain->width() - 1)));
+							   TERRAIN_WIDTH / (terrain->width() - 1),
+								 i));
 	}
 	return animals;
 }
@@ -157,9 +185,9 @@ void drawTerrain(Terrain* terrain) {
 
 //Draws a string at the top of the screen indicating that the specified number
 //of collisions have occurred
-void drawNumCollisions(int numCollisions) {
+void drawNumCollisions(int numCollisions, vector<Animal*> animals) {
 	ostringstream oss;
-	oss << "Colisoes: " << numCollisions;
+	oss << "Animais: " << animals.size();
 	string str = oss.str();
 	
 	glDisable(GL_TEXTURE_2D);
@@ -176,7 +204,7 @@ void drawNumCollisions(int numCollisions) {
 
 
 MD2Model* _model;
-vector<Animal*> _guys;
+vector<Animal*> _animals;
 Terrain* _terrain;
 float _angle = 0;
 Quadtree* _quadtree;
@@ -187,8 +215,8 @@ int _numCollisions; //The total number of collisions that have occurred
 void cleanup() {
 	delete _model;
 	
-	for(unsigned int i = 0; i < _guys.size(); i++) {
-		delete _guys[i];
+	for(unsigned int i = 0; i < _animals.size(); i++) {
+		delete _animals[i];
 	}
 	
 	t3dCleanup();
@@ -197,14 +225,14 @@ void cleanup() {
 void teclado(unsigned char key, int x, int y) {
 	switch (key) {
 		case 'd': 
-			_angle += 0.3f;
+			_angle += 0.8f;
 			if (_angle > 360) {
 				_angle -= 360;
 			}
 			break;
 
 		case 'a': 
-			_angle -= 0.3f;
+			_angle -= 0.8f;
 			if (_angle < 360) {
 				_angle += 360;
 			}
@@ -263,7 +291,7 @@ void drawScene() {
 	glLoadIdentity();
 	
 	//Draw the number of collisions that have occurred
-	drawNumCollisions(_numCollisions);
+	drawNumCollisions(_numCollisions, _animals);
 	
 	//The scaling factor for the terrain
 	float scale = TERRAIN_WIDTH / (_terrain->width() - 1);
@@ -281,9 +309,9 @@ void drawScene() {
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	
-	//Draw the guys
-	for(unsigned int i = 0; i < _guys.size(); i++) {
-		_guys[i]->draw();
+	//Draw the animals
+	for(unsigned int i = 0; i < _animals.size(); i++) {
+		_animals[i]->draw();
 	}
 	
 	//Draw the terrain
@@ -299,7 +327,7 @@ void update(int value) {
 		_angle -= 360;
 	}*/
 	
-	advance(_guys,
+	advance(_animals,
 			_quadtree,
 			0.025f,
 			_timeUntilHandleCollisions,
@@ -322,7 +350,7 @@ int main(int argc, char** argv) {
 	_terrain = loadTerrain("heightmap.bmp", 20.0f);
 
 	//Cria as instancias dos animais
-	_guys = makeAnimals(NUM_ZEBRA + NUM_LEAO, _model, _terrain); 
+	_animals = makeAnimals(NUM_ZEBRA + NUM_LEAO, _model, _terrain); 
 
 
 	//Calcula a escala do terreno
@@ -331,8 +359,8 @@ int main(int argc, char** argv) {
 
 	//Inicializa os quadrantes
 	_quadtree = new Quadtree(0, 0, TERRAIN_WIDTH, scaledTerrainLength, 1);
-	for(unsigned int i = 0; i < _guys.size(); i++) {
-		_quadtree->add(_guys[i]);
+	for(unsigned int i = 0; i < _animals.size(); i++) {
+		_quadtree->add(_animals[i]);
 	}
 	
 	glutDisplayFunc(drawScene);

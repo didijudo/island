@@ -23,7 +23,8 @@ class Lion : public Animal {
 public:
 	Lion(MD2Model* model1,
 		Terrain* terrain1,
-		float terrainScale1);
+		float terrainScale1,
+		int position1);
 
 	virtual void draw();
 	virtual int type();

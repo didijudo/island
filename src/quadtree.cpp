@@ -2,40 +2,39 @@
 
 using namespace std;
 
-void Quadtree::fileGuy(Animal* guy, float x, float z, bool addGuy) {
-	//Figure out in which child(ren) the guy belongs
+void Quadtree::fileAnimal(Animal* animal, float x, float z, bool addAnimal) {
+	//Figure out in which child(ren) the animal belongs
 	for(int xi = 0; xi < 2; xi++) {
 		if (xi == 0) {
-			if (x - guy->radius() > centerX) {
+			if (x - animal->radius() > centerX) {
 				continue;
 			}
 		}
-		else if (x + guy->radius() < centerX) {
+		else if (x + animal->radius() < centerX) {
 			continue;
 		}
 		
 		for(int zi = 0; zi < 2; zi++) {
 			if (zi == 0) {
-				if (z - guy->radius() > centerZ) {
+				if (z - animal->radius() > centerZ) {
 					continue;
 				}
 			}
-			else if (z + guy->radius() < centerZ) {
+			else if (z + animal->radius() < centerZ) {
 				continue;
 			}
 			
-			//Add or remove the guy
-			if (addGuy) {
-				children[xi][zi]->add(guy);
+			//Add or remove the animal
+			if (addAnimal) {
+				children[xi][zi]->add(animal);
 			}
 			else {
-				children[xi][zi]->remove(guy, x, z);
+				children[xi][zi]->remove(animal, x, z);
 			}
 		}
 	}
 }
 		
-		//Creates children of this, and moves the guys in this to the children
 void Quadtree::haveChildren() {
 	for(int x = 0; x < 2; x++) {
 		float minX2;
@@ -66,40 +65,40 @@ void Quadtree::haveChildren() {
 		}
 	}
 	
-	//Remove all guys from "guys" and add them to the new children
-	for(set<Animal*>::iterator it = guys.begin(); it != guys.end();
+	//Remove all animals from "animals" and add them to the new children
+	for(set<Animal*>::iterator it = animals.begin(); it != animals.end();
 			it++) {
-		Animal* guy = *it;
-		fileGuy(guy, guy->x(), guy->z(), true);
+		Animal* animal = *it;
+		fileAnimal(animal, animal->x(), animal->z(), true);
 	}
-	guys.clear();
+	animals.clear();
 	
 	hasChildren = true;
 }
 		
-//Adds all guys in this or one of its descendants to the specified set
-void Quadtree::collectGuys(set<Animal*> &gs) {
+//Adds all animals in this or one of its descendants to the specified set
+void Quadtree::collectAnimals(set<Animal*> &gs) {
 	if (hasChildren) {
 		for(int x = 0; x < 2; x++) {
 			for(int z = 0; z < 2; z++) {
-				children[x][z]->collectGuys(gs);
+				children[x][z]->collectAnimals(gs);
 			}
 		}
 	}
 	else {
-		for(set<Animal*>::iterator it = guys.begin(); it != guys.end();
+		for(set<Animal*>::iterator it = animals.begin(); it != animals.end();
 				it++) {
-			Animal* guy = *it;
-			gs.insert(guy);
+			Animal* animal = *it;
+			gs.insert(animal);
 		}
 	}
 }
 	
-//Destroys the children of this, and moves all guys in its descendants
-//to the "guys" set
+//Destroys the children of this, and moves all animals in its descendants
+//to the "animals" set
 void Quadtree::destroyChildren() {
-	//Move all guys in descendants of this to the "guys" set
-	collectGuys(guys);
+	//Move all animals in descendants of this to the "animals" set
+	collectAnimals(animals);
 	
 	for(int x = 0; x < 2; x++) {
 		for(int z = 0; z < 2; z++) {
@@ -110,19 +109,19 @@ void Quadtree::destroyChildren() {
 	hasChildren = false;
 }
 	
-//Removes the specified guy at the indicated position
-void Quadtree::remove(Animal* guy, float x, float z) {
-	numGuys--;
+//Removes the specified animal at the indicated position
+void Quadtree::remove(Animal* animal, float x, float z) {
+	numAnimals--;
 	
-	if (hasChildren && numGuys < MIN_GUYS_PER_QUADTREE) {
+	if (hasChildren && numAnimals < MIN_GUYS_PER_QUADTREE) {
 		destroyChildren();
 	}
 	
 	if (hasChildren) {
-		fileGuy(guy, x, z, false);
+		fileAnimal(animal, x, z, false);
 	}
 	else {
-		guys.erase(guy);
+		animals.erase(animal);
 	}
 }
 
@@ -135,7 +134,7 @@ Quadtree::Quadtree(float minX1, float minZ1, float maxX1, float maxZ1, int d) {
 	centerZ = (minZ + maxZ) / 2;
 	
 	depth = d;
-	numGuys = 0;
+	numAnimals = 0;
 	hasChildren = false;
 }
 
@@ -145,36 +144,36 @@ Quadtree::~Quadtree() {
 	}
 }
 
-//Adds a guy to this
-void Quadtree::add(Animal* guy) {
-	numGuys++;
+//Adds a animal to this
+void Quadtree::add(Animal* animal) {
+	numAnimals++;
 	if (!hasChildren && depth < MAX_QUADTREE_DEPTH &&
-		numGuys > MAX_GUYS_PER_QUADTREE) {
+		numAnimals > MAX_GUYS_PER_QUADTREE) {
 		haveChildren();
 	}
 	
 	if (hasChildren) {
-		fileGuy(guy, guy->x(), guy->z(), true);
+		fileAnimal(animal, animal->x(), animal->z(), true);
 	}
 	else {
-		guys.insert(guy);
+		animals.insert(animal);
 	}
 }
 
-//Removes a guy from this
-void Quadtree::remove(Animal* guy) {
-	remove(guy, guy->x(), guy->z());
+//Removes a animal from this
+void Quadtree::remove(Animal* animal) {
+	remove(animal, animal->x(), animal->z());
 }
 
-//Changes the position of a guy in this from the specified position to
+//Changes the position of a animal in this from the specified position to
 //its current position
-void Quadtree::guyMoved(Animal* guy, float x, float z) {
-	remove(guy, x, z);
-	add(guy);
+void Quadtree::animalMoved(Animal* animal, float x, float z) {
+	remove(animal, x, z);
+	add(animal);
 }
 
 //Adds potential collisions to the specified set
-void Quadtree::potentialCollisions(vector<GuyPair> &collisions) {
+void Quadtree::potentialCollisions(vector<AnimalPair> &collisions) {
 	if (hasChildren) {
 		for(int x = 0; x < 2; x++) {
 			for(int z = 0; z < 2; z++) {
@@ -183,18 +182,18 @@ void Quadtree::potentialCollisions(vector<GuyPair> &collisions) {
 		}
 	}
 	else {
-		//Add all pairs (guy1, guy2) from guys
-		for(set<Animal*>::iterator it = guys.begin(); it != guys.end();
+		//Add all pairs (ani1, ani2) from animals
+		for(set<Animal*>::iterator it = animals.begin(); it != animals.end();
 				it++) {
-			Animal* guy1 = *it;
-			for(set<Animal*>::iterator it2 = guys.begin();
-					it2 != guys.end(); it2++) {
-				Animal* guy2 = *it2;
+			Animal* ani1 = *it;
+			for(set<Animal*>::iterator it2 = animals.begin();
+					it2 != animals.end(); it2++) {
+				Animal* ani2 = *it2;
 				//This test makes sure that we only add each pair once
-				if (guy1 < guy2) {
-					GuyPair gp;
-					gp.guy1 = guy1;
-					gp.guy2 = guy2;
+				if (ani1 < ani2) {
+					AnimalPair gp;
+					gp.ani1 = ani1;
+					gp.ani2 = ani2;
 					collisions.push_back(gp);
 				}
 			}

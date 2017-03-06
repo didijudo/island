@@ -31,7 +31,7 @@ void Zebra::draw() {
 	glPushMatrix();
 	glTranslatef(x0, scale0 * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);
-	glColor3f(20, 23, 0);
+	glColor3f(0, 0, 255);
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(scale0, scale0, scale0);

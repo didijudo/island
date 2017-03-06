@@ -89,7 +89,7 @@ Animal::Animal(MD2Model* model1,
 	timeUntilSwitchDir = randomFloat() * (20 * randomFloat() + 15);
 }
 
-//Advances the state of the guy by the specified amount of time, by
+//Advances the state of the animal by the specified amount of time, by
 //calling step() the appropriate number of times and adjusting animTime
 void Animal::advance(float dt) {
 	//Adjust animTime
@@ -146,7 +146,7 @@ float Animal::z() {
 	return z0;
 }
 
-//Returns the current height of the guy on the terrain
+//Returns the current height of the animal on the terrain
 float Animal::y() {
 	return terrainScale *
 		heightAt(terrain, x0 / terrainScale, z0 / terrainScale);
@@ -168,12 +168,12 @@ float Animal::velocityZ() {
 	return speed * sin(angle);
 }
 
-//Returns the approximate radius of the guy
+//Returns the approximate radius of the animal
 float Animal::radius() {
 	return radius0;
 }
 
-//Returns the angle at which the guy is currently walking, in radians.
+//Returns the angle at which the animal is currently walking, in radians.
 //An angle of 0 indicates the positive x direction, while an angle of
 //PI / 2 indicates the positive z direction.
 float Animal::walkAngle() {
@@ -221,14 +221,14 @@ float Animal::heightAt(Terrain* terrain, float x, float z) {
 		fracX * ((1 - fracZ) * h21 + fracZ * h22);
 }
 
-//Adjusts the angle at which this guy is walking in response to a
-//collision with the specified guy
-void Animal::bounceOff(Animal* otherGuy) {
+//Adjusts the angle at which this animal is walking in response to a
+//collision with the specified animal
+void Animal::bounceOff(Animal* otherAnimal) {
 	float vx = velocityX();
 	float vz = velocityZ();
 
-	float dx = otherGuy->x0 - x0;
-	float dz = otherGuy->z0 - z0;
+	float dx = otherAnimal->x0 - x0;
+	float dz = otherAnimal->z0 - z0;
 	float m = sqrt(dx * dx + dz * dz);
 	dx /= m;
 	dz /= m;

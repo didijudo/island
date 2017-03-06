@@ -17,7 +17,7 @@
 
 using namespace std;
 
-const int NUM_ZEBRA = 15;
+const int NUM_ZEBRA = 30;
 const int NUM_LEAO = 5;
 
 const float TERRAIN_WIDTH = 50.0f;
@@ -96,9 +96,20 @@ void handleCollisions(vector<Animal*> &animals,
 						quadtree->remove(a2);	
 						animals.erase(animals.begin()+a2->position());
 						std::cout << "capacity changed: " << animals.capacity()<< '\n';
+
+						for (size_t i = a2->position(); i < animals.size(); i++)
+						{
+							animals[i]->setPosition(animals[i]->position() - 1);
+						}
 					}	else {
-						quadtree->remove(a1);	
+						quadtree->remove(a1);
 						animals.erase(animals.begin() + a1->position());
+						
+						for (size_t i = a1->position(); i < animals.size(); i++)
+						{
+							animals[i]->setPosition(animals[i]->position() - 1);
+						}
+						
 						std::cout << "capacity changed: " << animals.capacity()<< '\n';
 					}
 				} 	
@@ -107,9 +118,19 @@ void handleCollisions(vector<Animal*> &animals,
 					if (a2->scale() > 1.5 * a1->scale()) {
 						quadtree->remove(a1);	
 						animals.erase(animals.begin() + a1->position());
+
+						for (size_t i = a1->position(); i < animals.size(); i++)
+						{
+							animals[i]->setPosition(animals[i]->position() - 1);
+						}
 					}	else {
 						quadtree->remove(a2);
+
 						animals.erase(animals.begin() + a2->position());
+						for (size_t i = a2->position(); i < animals.size(); i++)
+						{
+							animals[i]->setPosition(animals[i]->position() - 1);
+						}
 					}
 				} 	
 			}

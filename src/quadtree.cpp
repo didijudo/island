@@ -113,7 +113,7 @@ void Quadtree::destroyChildren() {
 void Quadtree::remove(Animal* animal, float x, float z) {
 	numAnimals--;
 	
-	if (hasChildren && numAnimals < MIN_GUYS_PER_QUADTREE) {
+	if (hasChildren && numAnimals < MIN_ANIMALS_PER_QUADTREE) {
 		destroyChildren();
 	}
 	
@@ -148,7 +148,7 @@ Quadtree::~Quadtree() {
 void Quadtree::add(Animal* animal) {
 	numAnimals++;
 	if (!hasChildren && depth < MAX_QUADTREE_DEPTH &&
-		numAnimals > MAX_GUYS_PER_QUADTREE) {
+		numAnimals > MAX_ANIMALS_PER_QUADTREE) {
 		haveChildren();
 	}
 	

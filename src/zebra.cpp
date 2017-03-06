@@ -26,8 +26,6 @@ void Zebra::draw() {
 		return;
 	}
 
-	scale0 = 0.10f;
-
 	glPushMatrix();
 	glTranslatef(x0, scale0 * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);

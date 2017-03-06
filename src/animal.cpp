@@ -131,7 +131,9 @@ void Animal::draw() {
 	glTranslatef(x0, scale0 * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);
 	glColor3f(1, 1, 1);
+	//Rotação para o modelo virar para o sentido da animação
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	//Rotação para o modelo ficar em pé
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(scale0, scale0, scale0);
 	model->draw(animTime);

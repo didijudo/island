@@ -20,6 +20,8 @@
 #include "animal.h"
 
 class Lion : public Animal {
+protected:
+	float scale0 = 0.12f;
 public:
 	Lion(MD2Model* model1,
 		Terrain* terrain1,

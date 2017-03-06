@@ -26,8 +26,6 @@ void Lion::draw() {
 		return;
 	}
 
-	scale0 = 0.12f;
-
 	glPushMatrix();
 	glTranslatef(x0, scale0 * 10.0f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);

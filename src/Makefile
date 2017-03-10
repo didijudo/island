@@ -2,7 +2,7 @@ CC = g++
 #CFLAGS = -Wall
 PROG = island
 
-SRCS = main.cpp imageloader.cpp md2model.cpp text3d.cpp vec3f.cpp Terrain.cpp animal.cpp zebra.cpp lion.cpp quadtree.cpp
+SRCS = main.cpp imageloader.cpp md2model.cpp text3d.cpp vec3f.cpp Terrain.cpp animal.cpp zebra.cpp lion.cpp quadtree.cpp carregadorObj.cpp
 
 ifeq ($(shell uname),Darwin)
 	LIBS = -framework OpenGL -framework GLUT

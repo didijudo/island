@@ -4,6 +4,7 @@ float Animal::randomFloat() {
 	return (float)rand() / ((float)RAND_MAX + 1);
 }
 
+//Faz o Animal andar de fato
 void Animal::step() {
 	//Update the turning direction information
 	timeUntilSwitchDir -= ANIMAL_STEP_TIME;
@@ -62,7 +63,7 @@ void Animal::step() {
 }
 
 
-Animal::Animal(MD2Model* model1,
+Animal::Animal(Modelo* model1,
 	Terrain* terrain1,
 	float terrainScale1,
 	int position1) {
@@ -70,13 +71,11 @@ Animal::Animal(MD2Model* model1,
 	terrain = terrain1;
 	terrainScale = terrainScale1;
 
-	//Position of animal on array
+	//Posicao do animao no array de animais
 	position0 = position1;
 	animTime = 0;
 	timeUntilNextStep = 0;
 
-	//Initialize certain fields to random values
-	
 	radius0 = 0.4f * randomFloat() + 0.20f;
 	scale0 = radius0 / 2.5f;
 	x0 = randomFloat() *
@@ -89,10 +88,8 @@ Animal::Animal(MD2Model* model1,
 	timeUntilSwitchDir = randomFloat() * (20 * randomFloat() + 15);
 }
 
-//Advances the state of the animal by the specified amount of time, by
-//calling step() the appropriate number of times and adjusting animTime
+//Funcao utilizada para mover o Animal de acordo com a animação
 void Animal::advance(float dt) {
-	//Adjust animTime
 	animTime += 0.45f * dt * speed / radius0;
 	if (animTime > -100000000 && animTime < 1000000000) {
 		animTime -= (int)animTime;
@@ -104,7 +101,7 @@ void Animal::advance(float dt) {
 		animTime = 0;
 	}
 
-	//Call step() the appropriate number of times
+	//chama a funcao step() a quantidade de vezes apropriada para a animação
 	while (dt > 0) {
 		if (timeUntilNextStep < dt) {
 			dt -= timeUntilNextStep;
@@ -118,10 +115,12 @@ void Animal::advance(float dt) {
 	}
 }
 
+//Retorna o tipo do animal | Zebra ou Leão | 
 int Animal::type() {
 	return 0;
 }
 
+//Desenha um animal padrão | overreading nas classes especificas dos animais | 
 void Animal::draw() {
 	if (model == NULL) {
 		return;
@@ -134,7 +133,7 @@ void Animal::draw() {
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(scale0, scale0, scale0);
-	model->draw(animTime);
+	model->desenhar();
 	glPopMatrix();
 }
 
@@ -146,7 +145,7 @@ float Animal::z() {
 	return z0;
 }
 
-//Returns the current height of the animal on the terrain
+//Retorna a altura atual do Animal
 float Animal::y() {
 	return terrainScale *
 		heightAt(terrain, x0 / terrainScale, z0 / terrainScale);
@@ -168,21 +167,20 @@ float Animal::velocityZ() {
 	return speed * sin(angle);
 }
 
-//Returns the approximate radius of the animal
+//Retorna o raio criado pelo animal
 float Animal::radius() {
 	return radius0;
 }
 
-//Returns the angle at which the animal is currently walking, in radians.
-//An angle of 0 indicates the positive x direction, while an angle of
-//PI / 2 indicates the positive z direction.
+//Retorna o angulo que o animal esta andando naquele momento
+//Se o angulo for 0 significa que ele esta andando na direcao do eixo x
+// PI/2 indica a posicao positiva de z
 float Animal::walkAngle() {
 	return angle;
 }
 
-//Returns the approximate height of the terrain at the specified (x, z) position
+//Retorna o tamanho aproximado do terreno em (x,y)
 float Animal::heightAt(Terrain* terrain, float x, float z) {
-	//Make (x, z) lie within the bounds of the terrain
 	if (x < 0) {
 		x = 0;
 	}
@@ -196,7 +194,6 @@ float Animal::heightAt(Terrain* terrain, float x, float z) {
 		z = terrain->length() - 1;
 	}
 
-	//Compute the grid cell in which (x, z) lies and how close we are to the
 	//left and outward edges
 	int leftX = (int)x;
 	if (leftX == terrain->width() - 1) {
@@ -221,8 +218,7 @@ float Animal::heightAt(Terrain* terrain, float x, float z) {
 		fracX * ((1 - fracZ) * h21 + fracZ * h22);
 }
 
-//Adjusts the angle at which this animal is walking in response to a
-//collision with the specified animal
+//Altera o angulo caso os animais se encontrão em uma colisao
 void Animal::bounceOff(Animal* otherAnimal) {
 	float vx = velocityX();
 	float vz = velocityZ();
@@ -242,10 +238,12 @@ void Animal::bounceOff(Animal* otherAnimal) {
 	}
 }
 
+//Altera a scala utilizada para o tamanho do Animal
 void Animal::setScale(float scale) {
 	scale0 = scale;
 }
 
+//Altera a posição do Animal no vetor de animais
 void Animal::setPosition(int p) {
 	position0 = p;
 }

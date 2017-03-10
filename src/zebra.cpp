@@ -14,7 +14,7 @@
 #endif
 #include "zebra.hpp"
 
-Zebra::Zebra(MD2Model* model1, Terrain* terrain1, float terrainScale1, int position1) : 
+Zebra::Zebra(Modelo* model1, Terrain* terrain1, float terrainScale1, int position1) : 
 	Animal(model1, terrain1, terrainScale1, position1) {
 
 		radius0 = 0.5f;
@@ -26,16 +26,17 @@ void Zebra::draw() {
 		return;
 	}
 
-	scale0 = 0.10f;
+	scale0 = 1.0f;
 
 	glPushMatrix();
-	glTranslatef(x0, scale0 * 10.0f + y(), z0);
+	glTranslatef(x0, scale0 * 0.30f + y(), z0);
 	glRotatef(90 - angle * 180 / PI, 0, 1, 0);
 	glColor3f(0, 0, 255);
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+	//glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	//glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 	glScalef(scale0, scale0, scale0);
-	model->draw(animTime);
+	//model->draw(animTime);
+	model->desenhar();
 	glPopMatrix();
 }
 

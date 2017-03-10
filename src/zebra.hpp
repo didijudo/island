@@ -21,7 +21,7 @@
 
 class Zebra : public Animal {
 public:
-	Zebra(MD2Model* model1,
+	Zebra(Modelo* model1,
 		Terrain* terrain1,
 		float terrainScale1,
 		int position1);

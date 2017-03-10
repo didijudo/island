@@ -12,13 +12,15 @@
 #include "md2model.h"
 #include "terrain.h"
 #include <math.h>
+#include "carregadorObj.cpp"
 
 const int LION = 1;
 const int ZEBRA = 2;
 
 class Animal {
 protected:
-	MD2Model* model;
+	//MD2Model* model;
+	Modelo* model;
 	Terrain* terrain;
 	float terrainScale; //The scaling factor for the terrain
 	float x0;
@@ -46,7 +48,7 @@ protected:
 	void step();
 
 public:
-	Animal(MD2Model* model1,
+	Animal(Modelo* model1,
 		Terrain* terrain1,
 		float terrainScale1,
 		int position1);

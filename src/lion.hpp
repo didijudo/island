@@ -18,10 +18,11 @@
 #include "Dependencies\freeglut\freeglut.h"
 #endif
 #include "animal.h"
+#include "carregadorObj.cpp"
 
 class Lion : public Animal {
 public:
-	Lion(MD2Model* model1,
+	Lion(Modelo* model1,
 		Terrain* terrain1,
 		float terrainScale1,
 		int position1);

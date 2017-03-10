@@ -19,8 +19,8 @@ struct AnimalPair {
 };
 
 const int MAX_QUADTREE_DEPTH = 100;
-const int MIN_ANIMALS_PER_QUADTREE = 1;
-const int MAX_ANIMALS_PER_QUADTREE = 8;
+const int MIN_ANIMALS_PER_QUADTREE = 0;
+const int MAX_ANIMALS_PER_QUADTREE = 10;
 
 class Quadtree {
 	private:

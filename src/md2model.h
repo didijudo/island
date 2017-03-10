@@ -33,6 +33,7 @@
 #endif
 
 #include "vec3f.h"
+#include "carregadorObj.cpp"
 
 struct MD2Vertex {
 	Vec3f pos;

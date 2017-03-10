@@ -21,6 +21,8 @@
 #include "carregadorObj.cpp"
 
 class Lion : public Animal {
+protected:
+	float scale0 = 0.12f;
 public:
 	Lion(Modelo* model1,
 		Terrain* terrain1,

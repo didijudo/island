@@ -17,14 +17,14 @@
 
 using namespace std;
 
-const int NUM_ZEBRA = 10;
-const int NUM_LEAO = 10;
-bool teste = true;
+const int NUM_ZEBRA = 15;
+const int NUM_LEAO = 5;
+
 const float TERRAIN_WIDTH = 50.0f;
 
 const float TIME_BETWEEN_HANDLE_COLLISIONS = 0.1f;
 
-//Carrega o terreno onde a altura do terreno muda de -height / 2 atÃ© height / 2
+//Carrega o terreno onde a altura do terreno varia de -height / 2 atÃ© height / 2
 Terrain* loadTerrain(const char* filename, float height) {
 	Image* image = loadBMP(filename);
 	Terrain* t = new Terrain(image->width, image->height);
@@ -32,7 +32,7 @@ Terrain* loadTerrain(const char* filename, float height) {
 		for(int x = 0; x < image->width; x++) {
 			unsigned char color =
 				(unsigned char)image->pixels[3 * (y * image->width + x)];
-			float h = height * ((color / 255.0f) - 0.5f);
+			float h = -( height * ((color / 255.0f) - 0.5f));
 			t->setHeight(x, y, h);
 		}
 	}
@@ -42,6 +42,7 @@ Terrain* loadTerrain(const char* filename, float height) {
 }
 
 void inicializa() {
+	//Cor do oceano
 	glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
 }
 
@@ -49,7 +50,7 @@ void potentialCollisions(vector<AnimalPair> &cs, Quadtree* quadtree) {
 	quadtree->potentialCollisions(cs);
 }
 
-//Retorna se o animal1 esta colidindo com o animal2
+//Retorna se o animal1 e animal2 estão atualmente colidindo
 bool testCollision(Animal* animal1, Animal* animal2) {
 	float dx = animal1->x() - animal2->x();
 	float dz = animal1->z() - animal2->z();
@@ -64,7 +65,7 @@ bool testCollision(Animal* animal1, Animal* animal2) {
 	}
 }
 
-//Funcao que lida com as colisÃµes
+//Define o que fazer quando houver colisões
 void handleCollisions(vector<Animal*> &animals,
 					  Quadtree* quadtree,
 					  int &numCollisions) {
@@ -132,9 +133,11 @@ void handleCollisions(vector<Animal*> &animals,
 						{
 							animals[i]->setPosition(animals[i]->position() - 1);
 						}
-					}	else {
-						quadtree->remove(a2);
+					} else {
+						
+						a1->setScale(a1->scale()*10);
 
+						quadtree->remove(a2);
 						animals.erase(animals.begin() + a2->position());
 						for (size_t i = a2->position() - 1; i < animals.size(); i++)
 						{
@@ -160,6 +163,7 @@ void moveAnimals(vector<Animal*> &animals, Quadtree* quadtree, float dt) {
 	}
 }
 
+//Atualiza a posição de todos animais
 void advance(vector<Animal*> &animals,
 			 Quadtree* quadtree,
 			 float t,
@@ -282,7 +286,11 @@ void teclado(unsigned char key, int x, int y) {
 				_angle += 360;
 			}
 			break;
+		case 's':
 
+			break;
+		case 'w':
+			break;
 		case 27: //Escape key
 			cleanup();
 			exit(0);
@@ -313,15 +321,10 @@ void initRendering() {
 	glEnable(GL_COLOR_MATERIAL);
 	glShadeModel(GL_SMOOTH);
 	
-	t3dInit(); //Initialize text drawing functionality
+	t3dInit(); //Inicializa o desenho do texto
 	
 	_modelLion = Modelo::carregarObj((char*)"Simba.obj",(char*)"Simba.png");
 	_modelZebra = Modelo::carregarObj((char*)"Zebra.obj",(char*)"Zebra.jpg");
-	//Load the model
-	/*_model = MD2Model::load("blockybalboa.md2");
-	if (_model != NULL) {
-		_model->setAnimation("run");
-	}*/
 }
 
 void handleResize(int w, int h) {
@@ -337,7 +340,7 @@ void drawScene() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	//Draw the number of collisions that have occurred
+	//Desenha o texto na tela
 	drawNumCollisions(_numCollisions, _animals);
 	
 	float scale = TERRAIN_WIDTH / (_terrain->width() - 1);
